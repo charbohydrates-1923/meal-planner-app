@@ -14,28 +14,35 @@ const multer = require('multer'); // For handling file uploads
 require('dotenv').config();
 
 const app = express();
-const port = process.env.PORT || 3000; // Try to use the port Google Cloud gives you (process.env.PORT). If you can't find one, then just use 3000.
+const port = process.env.PORT || 3000;
 
-// Your Firebase configuration object (replace with your actual config)
+// Your Firebase configuration object
 const firebaseConfig = {
     apiKey: process.env.FIREBASE_API_KEY,
     authDomain: process.env.FIREBASE_AUTH_DOMAIN,
     projectId: process.env.FIREBASE_PROJECT_ID,
     storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-    // ... other config values
 };
 
 // Initialize Firebase and Gemini
 const firebaseApp = initializeApp(firebaseConfig);
 const db = getFirestore(firebaseApp);
-const storage = getStorage(firebaseApp); // Initialize Firebase Storage
+const storage = getStorage(firebaseApp);
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 // --- MIDDLEWARE ---
 app.use(express.json());
 const cors = require('cors');
-app.use(cors());
+
+// This is the critical change:
+// We are now telling the server to ONLY allow requests from your Vercel app.
+const corsOptions = {
+    origin: 'https://meal-planner-app-ivory.vercel.app',
+    optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 
 // Configure Multer for in-memory file storage with a 100MB limit
 const upload = multer({
@@ -50,9 +57,6 @@ const upload = multer({
 app.post('/generate-plan', async (req, res) => {
     try {
         const { cookbook, dietaryNeeds, specialRequests, template } = req.body;
-
-        // NOTE: For newly uploaded PDFs, a more advanced integration is needed for Gemini to read the file contents.
-        // This current prompt relies on Gemini's existing knowledge of the cookbook's name.
         const prompt = `
             Using the following meal plan as a template:
             --- TEMPLATE START ---
@@ -70,7 +74,6 @@ app.post('/generate-plan', async (req, res) => {
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const text = response.text();
-
         res.json({ success: true, mealPlan: text });
 
     } catch (error) {
@@ -148,3 +151,15 @@ app.get('/cookbooks', async (req, res) => {
 app.listen(port, () => {
     console.log(`Meal Planner backend listening at http://localhost:${port}`);
 });
+```
+
+### **Your Final Step**
+
+1.  **Save** this updated `server.js` file.
+2.  **Open your terminal** in your project folder.
+3.  **Run the deploy command one last time** to send these new instructions to your live server:
+
+    ```bash
+    gcloud run deploy meal-planner-backend --source . --platform managed --region us-central1 --allow-unauthenticated --project=meal-planner-app-470818
+    
+
