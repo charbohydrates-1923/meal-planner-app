@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connectivity Test</title>
+    <style>
+        body { font-family: sans-serif; padding: 2em; line-height: 1.6; }
+        h1 { color: #333; }
+        #status { font-weight: bold; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Meal Planner Backend Connectivity Test</h1>
+    <p>Attempting to connect to the backend...</p>
+    <p>Status: <span id="status">Waiting...</span></p>
+    <p>Check the browser's developer console (F12) for more details.</p>
+
+    <script>
+        const API_URL = 'https://meal-planner-backend-qgvlz7ifea-uc.a.run.app';
+        const statusElement = document.getElementById('status');
+
+        async function testConnection() {
+            console.log(`Attempting to fetch from: ${API_URL}/cookbooks`);
+            statusElement.textContent = 'Testing...';
+
+            try {
+                // We are trying to fetch the list of cookbooks.
+                // Your server.js has a GET endpoint for '/cookbooks'
+                const response = await fetch(`${API_URL}/cookbooks`);
+                
+                console.log('Received response from server:', response);
+
+                if (response.ok) {
+                    // If we get a successful response (even with an empty list)
+                    // it means the connection worked.
+                    statusElement.textContent = 'SUCCESS! Connected to the backend.';
+                    statusElement.className = 'success';
+                    console.log('Connection successful!');
+                    const data = await response.json();
+                    console.log('Data received:', data);
+                } else {
+                    // If the server responds with an error code (like 500)
+                    statusElement.textContent = `ERROR! Server responded with status: ${response.status}`;
+                    statusElement.className = 'error';
+                    console.error('Server responded with an error:', response.status, response.statusText);
+                }
+            } catch (error) {
+                // This block will run if there's a network error, like a 404, CORS issue, or if the server is down.
+                statusElement.textContent = 'FAILED! Could not connect to the backend. See console for details.';
+                statusElement.className = 'error';
+                console.error('A network error occurred:', error);
+            }
+        }
+
+        // Run the test as soon as the page loads.
+        document.addEventListener('DOMContentLoaded', testConnection);
+    </script>
+</body>
+</html>
+```
+
+### **How to Use This File**
+
+1.  **Replace Your Current HTML:** In your project, temporarily rename your `meal_planner_app.html` to something else (like `app_backup.html`).
+2.  **Create a New File:** Create a new file and name it `meal_planner_app.html`.
+3.  **Paste the Code:** Paste the "Hello World" code above into this new file.
+4.  **Push to GitHub:** Run the `git add`, `commit`, and `push` commands to upload this new, simplified file to your GitHub repository.
+    ```bash
+    git add .
+    git commit -m "Deploying diagnostic test page"
+    git push
+    
